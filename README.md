@@ -1,7 +1,7 @@
 
 # 🎙️ Self-Host Voxtral-Mini-3B-2507 with BentoML
 
-Follow this guide to self-host the [Voxtral-Mini-3B-2507](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507) audio-language model using BentoML. This service enables high-performance audio transcription, translation, and audio Q\&A with support for popular audio formats.
+Follow this guide to self-host the [Voxtral-Mini-3B-2507](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507) audio-language model using BentoML. This service enables high-performance audio **transcription**, **translation**, and **audio Q\&A** with support for popular audio formats.
 
 
 If your team doesn’t already have access to BentoCloud, use the buttons below to get started.
@@ -57,6 +57,7 @@ Visit [http://localhost:3000](http://localhost:3000) for Swagger UI.
 ## 🧪 API Endpoints
 
 ### 🔍 Health Check
+Run the code:
 
 ```bash
 GET /health
@@ -76,6 +77,7 @@ GET /health
 ---
 
 ### 📝 Audio Transcription
+Run the code:
 
 ```bash
 POST /transcribe_audio
@@ -92,7 +94,7 @@ curl -X POST http://localhost:3000/transcribe_audio \
 ---
 
 ### ❓ Audio Q\&A
-
+Run the code:
 ```bash
 POST /audio_qa
 ```
@@ -109,7 +111,7 @@ curl -X POST http://localhost:3000/audio_qa \
 
 ## ☁️ Deploy to BentoCloud
 
-After testing locally, deploy to [BentoCloud](https://cloud.bentoml.com/) for scalability:
+After testing locally, get the API key from Hugging Face website, deploy to [BentoCloud](https://cloud.bentoml.com/) for scalability:
 
 1. **Login and set secret**
 
@@ -130,72 +132,6 @@ You'll receive a URL like `https://voxtral.bentoml.app/v1`
 
 ---
 
-## 🐳 Docker Deployment
-
-To containerize and run locally with Docker:
-
-```bash
-bentoml containerize voxtral-mini-3b-audio:latest -t voxtral-audio:latest
-docker run --gpus all -p 3000:3000 voxtral-audio:latest
-```
-
----
-
-## 📦 Kubernetes (Optional)
-
-For advanced users:
-
-```bash
-bentoml generate kubernetes voxtral-mini-3b-audio:latest
-kubectl apply -f bentoml-deployment.yaml
-```
-
----
-
-## 🧰 Performance Tips
-
-| Setting                  | Recommendation                  |
-| ------------------------ | ------------------------------- |
-| `gpu_memory_utilization` | 0.85                            |
-| `max_batch_size`         | 4 (adjust based on GPU)         |
-| Audio sample rate        | 16kHz (resampled automatically) |
-| Max audio duration       | 40 minutes                      |
-
-Monitor with:
-
-```bash
-nvidia-smi -l 1
-docker stats
-```
-
----
-
-## 🛠️ Troubleshooting
-
-| Problem            | Fix                                                        |
-| ------------------ | ---------------------------------------------------------- |
-| OOM on GPU         | Lower `gpu_memory_utilization`, reduce batch size          |
-| Model load timeout | Increase timeout, ensure model is cached or internet is up |
-| Audio not accepted | Check format & file size (<100MB recommended)              |
-| Latency too high   | Use GPUs, optimize preprocessing                           |
-
-Enable debug logging:
-
-```bash
-BENTOML_LOG_LEVEL=DEBUG bentoml serve service:VoxtralAudioService
-```
-
----
-
-## 🔐 Security Best Practices
-
-* Validate all input files
-* Enable HTTPS and API token auth (if public)
-* Run containers as non-root
-* Add rate limits for public endpoints
-
----
-
 ## 📚 Resources
 
 * 🔗 [Hugging Face Voxtral Model](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507)
@@ -203,15 +139,3 @@ BENTOML_LOG_LEVEL=DEBUG bentoml serve service:VoxtralAudioService
 * 🧠 [vLLM Inference Guide](https://docs.vllm.ai)
 
 ---
-
-## 🤝 Contributing
-
-1. Fork the repo
-2. Create a feature branch
-3. Submit a PR with clear commit messages
-
----
-
-## 🧾 License
-
-MIT License — see [LICENSE](./LICENSE) file for details.
