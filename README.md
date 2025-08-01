@@ -1,61 +1,69 @@
-# Voxtral-Mini-3B-2507 BentoML Deployment
 
-Production-ready BentoML service for the Mistral Voxtral-Mini-3B-2507 audio-language model, optimized for transcription, translation, and audio Q&A tasks.
+# 🎙️ Self-Host Voxtral-Mini-3B-2507 with BentoML
 
-## Model Overview
+Follow this guide to self-host the [Voxtral-Mini-3B-2507](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507) audio-language model using BentoML. This service enables high-performance audio transcription, translation, and audio Q\&A with support for popular audio formats.
 
-- **Model**: `mistralai/Voxtral-Mini-3B-2507`
-- **Capabilities**: Audio transcription, translation, understanding, and Q&A
-- **Context Length**: 32k tokens (30-40 minutes of audio)
-- **Memory Requirement**: ~9.5GB GPU RAM
-- **Supported Audio Formats**: WAV, MP3, M4A, FLAC, AAC, OGG, WMA
 
-## Quick Start
+If your team doesn’t already have access to BentoCloud, use the buttons below to get started.
 
-### Prerequisites
+[![Deploy on BentoCloud](https://img.shields.io/badge/Deploy_on_BentoCloud-d0bfff?style=for-the-badge)](https://testversiona.cloud.bentoml.com/deployments?q=)
+[![Talk to sales](https://img.shields.io/badge/Talk_to_sales-eefbe4?style=for-the-badge)](https://bentoml.com/contact)
 
-- Python 3.11+
-- CUDA 12.1+ compatible GPU (minimum 10GB VRAM recommended)
-- BentoML 1.2.23+
-- Docker (for containerized deployment)
+See [here](https://docs.bentoml.com/en/latest/examples/overview.html) for a full list of BentoML example projects.
 
-### Local Development Setup
+---
 
-1. **Clone and Navigate**
-   ```bash
-   cd voxtral_model_deployment_v2
-   ```
+## 📌 Model Overview
 
-2. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+| Property        | Value                                  |
+| --------------- | -------------------------------------- |
+| Model           | `mistralai/Voxtral-Mini-3B-2507`       |
+| Context Length  | 32k tokens (30–40 min audio)           |
+| GPU VRAM Needed | \~9.5 GB                               |
+| Audio Formats   | WAV, MP3, M4A, FLAC, AAC, OGG, WMA     |
+| Capabilities    | Transcription, translation, audio Q\&A |
 
-3. **Set Environment Variables** (Optional)
-   ```bash
-   export VOXTRAL_MODEL_NAME="mistralai/Voxtral-Mini-3B-2507"
-   export VOXTRAL_GPU_MEMORY_UTIL=0.85
-   export VOXTRAL_MAX_BATCH_SIZE=4
-   ```
+---
 
-4. **Start the Service**
-   ```bash
-   bentoml serve service:VoxtralAudioService --reload
-   ```
+## 🧱 Prerequisites
 
-5. **Test the Service**
-   ```bash
-   curl -X GET http://localhost:3000/health
-   ```
+* Access to the [Voxtral model on Hugging Face](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507)
+* Python 3.11+
+* CUDA 12.1+ GPU (≥10GB VRAM recommended)
+* [BentoML 1.2.23+](https://pypi.org/project/bentoml/)
 
-## API Endpoints
+---
 
-### 1. Health Check
+## ⚙️ Setup: Run Locally
+
+1. **Clone the repo and install dependencies**
+
+```bash
+git clone https://github.com/your-org/voxtral-model-deployment.git
+cd voxtral_model_deployment_v2
+pip install -r requirements.txt
+```
+
+2. **Start the service**
+
+```bash
+bentoml serve service:VoxtralAudioService --reload
+```
+
+Visit [http://localhost:3000](http://localhost:3000) for Swagger UI.
+
+---
+
+## 🧪 API Endpoints
+
+### 🔍 Health Check
+
 ```bash
 GET /health
 ```
 
-**Response:**
+**Example response:**
+
 ```json
 {
   "status": "healthy",
@@ -65,278 +73,145 @@ GET /health
 }
 ```
 
-### 2. Audio Transcription
+---
+
+### 📝 Audio Transcription
+
 ```bash
 POST /transcribe_audio
 ```
 
-**Request (multipart/form-data):**
-- `audio`: Audio file (WAV, MP3, M4A, etc.)
-- `data`: JSON with parameters
-
 **Example:**
+
 ```bash
 curl -X POST http://localhost:3000/transcribe_audio \
-  -F "audio=@test_audio_samples/short_test_5s.wav" \
+  -F "audio=@test_audio_samples/short_test.wav" \
   -F 'data={"language": "en", "temperature": 0.1, "max_tokens": 1024}'
 ```
 
-**Response:**
-```json
-{
-  "text": "Hello, this is a test of the Voxtral audio transcription service.",
-  "duration_seconds": 5.2,
-  "model_info": {
-    "model_name": "mistralai/Voxtral-Mini-3B-2507",
-    "context_length": "32768"
-  },
-  "processing_time": 2.34
-}
-```
+---
 
-### 3. Audio Q&A
+### ❓ Audio Q\&A
+
 ```bash
 POST /audio_qa
 ```
 
-**Request (multipart/form-data):**
-- `audio`: Audio file
-- `data`: JSON with question and parameters
-
 **Example:**
+
 ```bash
 curl -X POST http://localhost:3000/audio_qa \
-  -F "audio=@test_audio_samples/medium_test_30s.wav" \
-  -F 'data={"question": "What is the main topic discussed?", "temperature": 0.7, "max_tokens": 2048}'
+  -F "audio=@test_audio_samples/medium_test.wav" \
+  -F 'data={"question": "What is the topic?", "temperature": 0.7}'
 ```
 
-**Response:**
-```json
-{
-  "text": "The main topic discussed in the audio is...",
-  "duration_seconds": 30.1,
-  "model_info": {
-    "model_name": "mistralai/Voxtral-Mini-3B-2507",
-    "context_length": "32768"
-  },
-  "processing_time": 4.67
-}
-```
+---
 
-## Configuration
+## ☁️ Deploy to BentoCloud
 
-### Environment Variables
+After testing locally, deploy to [BentoCloud](https://cloud.bentoml.com/) for scalability:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `VOXTRAL_MODEL_NAME` | `mistralai/Voxtral-Mini-3B-2507` | Model identifier |
-| `VOXTRAL_GPU_MEMORY_UTIL` | `0.85` | GPU memory utilization (0.0-1.0) |
-| `VOXTRAL_MAX_BATCH_SIZE` | `4` | Maximum batch size |
-| `VOXTRAL_MAX_MODEL_LEN` | `32768` | Maximum context length |
-| `VOXTRAL_TEMPERATURE` | `0.7` | Default sampling temperature |
-| `VOXTRAL_REQUEST_TIMEOUT` | `300` | Request timeout in seconds |
+1. **Login and set secret**
 
-### Audio Processing Settings
-
-- **Sample Rate**: 16kHz (automatically resampled)
-- **Max Duration**: 40 minutes (2400 seconds)  
-- **Supported Formats**: WAV, MP3, M4A, FLAC, AAC, OGG, WMA
-- **Max File Size**: Limited by available memory
-
-## Deployment
-
-### BentoML Cloud Deployment
-
-1. **Build the Bento**
-   ```bash
-   bentoml build
-   ```
-
-2. **Deploy to BentoML Cloud**
-   ```bash
-   bentoml deploy <bento_tag> --cluster-name <cluster>
-   ```
-
-### Docker Deployment
-
-1. **Build Docker Image**
-   ```bash
-   bentoml containerize voxtral-mini-3b-audio:latest -t voxtral-audio:latest
-   ```
-
-2. **Run Container**
-   ```bash
-   docker run --gpus all -p 3000:3000 voxtral-audio:latest
-   ```
-
-### Kubernetes Deployment
-
-1. **Generate Kubernetes Manifests**
-   ```bash
-   bentoml generate kubernetes voxtral-mini-3b-audio:latest
-   ```
-
-2. **Apply to Cluster**
-   ```bash
-   kubectl apply -f bentoml-deployment.yaml
-   ```
-
-## Testing
-
-### Unit Tests
 ```bash
-pytest tests/ -v
+bentoml cloud login
+bentoml secret create huggingface HF_TOKEN=$HF_TOKEN
 ```
 
-### Load Testing
-```bash
-# Install artillery
-npm install -g artillery
+2. **Deploy**
 
-# Run load test
-artillery run load-test.yml
+```bash
+bentoml deploy service:VoxtralAudioService --secret huggingface
 ```
 
-### Manual Testing
+3. **Use the endpoint**
 
-1. **Test Transcription**
-   ```python
-   import requests
-   
-   with open("test_audio_samples/short_test_5s.wav", "rb") as f:
-       response = requests.post(
-           "http://localhost:3000/transcribe_audio",
-           files={"audio": f},
-           data={"data": '{"temperature": 0.1}'}
-       )
-   print(response.json())
-   ```
+You'll receive a URL like `https://voxtral.bentoml.app/v1`
 
-2. **Test Q&A**
-   ```python
-   import requests
-   
-   with open("test_audio_samples/medium_test_30s.wav", "rb") as f:
-       response = requests.post(
-           "http://localhost:3000/audio_qa",
-           files={"audio": f},
-           data={"data": '{"question": "Summarize the content", "temperature": 0.7}'}
-       )
-   print(response.json())
-   ```
+---
 
-## Performance Optimization
+## 🐳 Docker Deployment
 
-### GPU Memory Management
-- Use `gpu_memory_utilization=0.85` for optimal performance
-- Monitor GPU memory usage with `nvidia-smi`
-- Adjust `max_batch_size` based on available VRAM
+To containerize and run locally with Docker:
 
-### Scaling Configuration
-- **Min Replicas**: 1
-- **Max Replicas**: 3
-- **Auto-scaling**: Based on CPU (70%) and memory (80%) utilization
-- **Concurrency**: Limited to 2 concurrent requests per instance
-
-### Audio Processing Optimization
-- Audio is automatically resampled to 16kHz
-- Large files are processed in chunks
-- Memory is released immediately after processing
-
-## Monitoring and Logging
-
-### Health Monitoring
 ```bash
-# Check service health
-curl http://localhost:3000/health
+bentoml containerize voxtral-mini-3b-audio:latest -t voxtral-audio:latest
+docker run --gpus all -p 3000:3000 voxtral-audio:latest
+```
 
-# Monitor GPU usage
+---
+
+## 📦 Kubernetes (Optional)
+
+For advanced users:
+
+```bash
+bentoml generate kubernetes voxtral-mini-3b-audio:latest
+kubectl apply -f bentoml-deployment.yaml
+```
+
+---
+
+## 🧰 Performance Tips
+
+| Setting                  | Recommendation                  |
+| ------------------------ | ------------------------------- |
+| `gpu_memory_utilization` | 0.85                            |
+| `max_batch_size`         | 4 (adjust based on GPU)         |
+| Audio sample rate        | 16kHz (resampled automatically) |
+| Max audio duration       | 40 minutes                      |
+
+Monitor with:
+
+```bash
 nvidia-smi -l 1
+docker stats
 ```
 
-### Logging Configuration
-```python
-import logging
-logging.basicConfig(level=logging.INFO)
-```
+---
 
-### Metrics Collection
-- Request latency tracking
-- GPU memory usage monitoring
-- Error rate tracking
-- Audio processing duration metrics
+## 🛠️ Troubleshooting
 
-## Troubleshooting
+| Problem            | Fix                                                        |
+| ------------------ | ---------------------------------------------------------- |
+| OOM on GPU         | Lower `gpu_memory_utilization`, reduce batch size          |
+| Model load timeout | Increase timeout, ensure model is cached or internet is up |
+| Audio not accepted | Check format & file size (<100MB recommended)              |
+| Latency too high   | Use GPUs, optimize preprocessing                           |
 
-### Common Issues
+Enable debug logging:
 
-1. **GPU Out of Memory**
-   - Reduce `gpu_memory_utilization` to 0.7
-   - Decrease `max_batch_size` to 2
-   - Process shorter audio segments
-
-2. **Model Loading Timeout**
-   - Increase `MODEL_LOAD_TIMEOUT` to 900 seconds
-   - Ensure sufficient disk space for model cache
-   - Check internet connectivity for model download
-
-3. **Audio Processing Errors**
-   - Verify audio format is supported
-   - Check file size limits (< 100MB recommended)
-   - Ensure audio is not corrupted
-
-4. **Slow Response Times**
-   - Use GPU-optimized Docker images
-   - Enable tensor parallelism for larger models
-   - Optimize audio preprocessing pipeline
-
-### Debug Mode
 ```bash
 BENTOML_LOG_LEVEL=DEBUG bentoml serve service:VoxtralAudioService
 ```
 
-### Resource Monitoring
-```bash
-# Monitor GPU usage
-watch -n 1 nvidia-smi
+---
 
-# Monitor system resources
-htop
+## 🔐 Security Best Practices
 
-# Check Docker container stats
-docker stats voxtral-audio
-```
+* Validate all input files
+* Enable HTTPS and API token auth (if public)
+* Run containers as non-root
+* Add rate limits for public endpoints
 
-## Security Considerations
+---
 
-- Input validation for all audio files
-- Rate limiting to prevent abuse
-- Secure file handling with automatic cleanup
-- Non-root container execution
-- Network security policies
+## 📚 Resources
 
-## Contributing
+* 🔗 [Hugging Face Voxtral Model](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507)
+* 📘 [BentoML Documentation](https://docs.bentoml.com)
+* 🧠 [vLLM Inference Guide](https://docs.vllm.ai)
 
-1. Fork the repository
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
 2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
+3. Submit a PR with clear commit messages
 
-## License
+---
 
-This project is licensed under the MIT License. See LICENSE file for details.
+## 🧾 License
 
-## Support
-
-- **Issues**: Create GitHub issues for bugs and feature requests
-- **Documentation**: Check the official BentoML documentation
-- **Community**: Join the BentoML Discord community
-
-## Changelog
-
-### v2.0.0
-- Initial production-ready deployment
-- vLLM integration with audio support
-- Multi-format audio processing
-- Auto-scaling configuration
-- Comprehensive monitoring setup
+MIT License — see [LICENSE](./LICENSE) file for details.
