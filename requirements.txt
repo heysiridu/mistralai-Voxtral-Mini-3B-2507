@@ -1,0 +1,50 @@
+# Core dependencies
+bentoml>=1.4.18
+pydantic>=2.8.2
+
+# Audio processing with Transformers (Voxtral support)
+
+# Mistral dependencies (for cloud deployment)
+mistral-common>=1.8.1
+
+# Audio processing
+librosa>=0.10.0
+soundfile>=0.12.0
+ffmpeg-python>=0.2.0
+pydub>=0.25.0
+
+# PyTorch ecosystem (macOS compatible)
+torch>=2.3.0
+torchaudio>=2.3.0
+torchvision>=0.18.0
+# Skip xformers on macOS - not needed for Transformers
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Additional ML libraries  
+transformers>=4.54.0
+tokenizers>=0.19.0
+safetensors>=0.4.0
+huggingface-hub>=0.24.0
+
+# Async and web framework support
+uvicorn[standard]>=0.30.0
+fastapi>=0.110.0
+httpx>=0.27.0
+aiofiles>=23.0.0
+
+# Utilities
+numpy>=1.24.0
+Pillow>=10.0.0
+requests>=2.28.0
+python-multipart>=0.0.7
+hf_transfer>=0.1.0
+accelerate>=0.20.0
+
+# Logging and monitoring
+prometheus-client==0.20.0
+opentelemetry-api==1.26.0
+opentelemetry-sdk==1.26.0
+
+# Development and testing (optional)
+pytest==8.3.2
+pytest-asyncio==0.23.8

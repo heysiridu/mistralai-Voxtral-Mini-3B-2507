@@ -1,0 +1,58 @@
+service: "service:VoxtralAudioService"
+labels:
+  owner: voxtral-team
+  project: voxtral-audio-processing
+  version: "2.0"
+  name: voxtral-mini-3b-audio
+
+description: |
+  BentoML service for Voxtral-Mini-3B-2507 audio-language model
+  Supports audio transcription, translation, and Q&A capabilities
+  Optimized for production deployment with GPU acceleration
+
+include:
+  - "service.py"
+  - "config.py"
+  - "requirements.txt"
+  - "test_audio_samples/"
+
+exclude:
+  - "__pycache__/"
+  - "*.pyc"
+  - ".git/"
+  - ".gitignore"
+  - "*.log"
+  - ".env"
+
+python:
+  requirements_txt: "./requirements.txt"
+  lock_packages: false
+  index_url: "https://pypi.org/simple/"
+  extra_index_url:
+    - "https://download.pytorch.org/whl/cu121"
+  trusted_host:
+    - "pypi.org"
+    - "download.pytorch.org"
+
+docker:
+  base_image: "python:3.11-slim"
+  python_version: "3.11"
+
+envs:
+  - name: BENTOML_LOG_LEVEL
+    value: INFO
+  - name: CUDA_VISIBLE_DEVICES
+    value: "0"
+  - name: VLLM_USE_MODELSCOPE
+    value: "False"
+  - name: HF_HUB_ENABLE_HF_TRANSFER
+    value: "1"
+  - name: TOKENIZERS_PARALLELISM
+    value: "false"
+  - name: OMP_NUM_THREADS
+    value: "1"
+  - name: MKL_NUM_THREADS
+    value: "1"
+  - name: HF_TOKEN
+    value: "${HF_TOKEN}"
+
