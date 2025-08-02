@@ -14,7 +14,7 @@ include:
   - "service.py"
   - "config.py"
   - "requirements.txt"
-  - "test_audio_samples/"
+  - "female.wav"
 
 exclude:
   - "__pycache__/"
@@ -28,11 +28,6 @@ python:
   requirements_txt: "./requirements.txt"
   lock_packages: false
   index_url: "https://pypi.org/simple/"
-  extra_index_url:
-    - "https://download.pytorch.org/whl/cu121"
-  trusted_host:
-    - "pypi.org"
-    - "download.pytorch.org"
 
 docker:
   base_image: "python:3.11-slim"
@@ -46,7 +41,7 @@ envs:
   - name: VLLM_USE_MODELSCOPE
     value: "False"
   - name: HF_HUB_ENABLE_HF_TRANSFER
-    value: "1"
+    value: "0"
   - name: TOKENIZERS_PARALLELISM
     value: "false"
   - name: OMP_NUM_THREADS
@@ -54,5 +49,4 @@ envs:
   - name: MKL_NUM_THREADS
     value: "1"
   - name: HF_TOKEN
-    value: "${HF_TOKEN}"
-
+    value: "replace it with your real token"
