@@ -1,8 +1,6 @@
-
 # 🎙️ Self-Host Voxtral-Mini-3B-2507 with BentoML
 
 Follow this guide to self-host the [Voxtral-Mini-3B-2507](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507) audio-language model using BentoML. This service enables high-performance audio **transcription**, **translation**, and **audio Q\&A** with support for popular audio formats.
-
 
 If your team doesn’t already have access to BentoCloud, use the buttons below to get started.
 
@@ -17,8 +15,8 @@ See [here](https://docs.bentoml.com/en/latest/examples/overview.html) for a full
 
 | Property        | Value                                  |
 | --------------- | -------------------------------------- |
-| Model           | `mistralai/Voxtral-Mini-3B-2507`       |
-| Context Length  | 32k tokens (30–40 min audio)           |
+| Model           | `mistralai/Voxtral-Mini-3B-2507`     |
+| Context Length  | 32k tokens (30–40 min audio)          |
 | GPU VRAM Needed | \~9.5 GB                               |
 | Audio Formats   | WAV, MP3, M4A, FLAC, AAC, OGG, WMA     |
 | Capabilities    | Transcription, translation, audio Q\&A |
@@ -34,14 +32,20 @@ See [here](https://docs.bentoml.com/en/latest/examples/overview.html) for a full
 
 ---
 
-## ⚙️ Setup: Run Locally
+## ⚙️ Setup: Run Locally (optional)
+
+Before you test locally, make sure you have [uv Python package and project manager](https://docs.astral.sh/uv/) installed. This will save you time for adjusting version conflicts. Make sure to follow all the guidelines to have uv in your folder.
+
+```
+pip install uv
+```
 
 1. **Clone the repo and install dependencies**
 
 ```bash
-git clone https://github.com/your-org/voxtral-model-deployment.git
+git clone git@github.com:heysiridu/voxtral_model_deployment_v2.git
 cd voxtral_model_deployment_v2
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 2. **Start the service**
@@ -52,83 +56,43 @@ bentoml serve service:VoxtralAudioService --reload
 
 Visit [http://localhost:3000](http://localhost:3000) for Swagger UI.
 
----
-
-## 🧪 API Endpoints
-
-### 🔍 Health Check
-Run the code:
-
-```bash
-GET /health
-```
-
-**Example response:**
-
-```json
-{
-  "status": "healthy",
-  "model": "mistralai/Voxtral-Mini-3B-2507",
-  "gpu_available": "true",
-  "gpu_count": "1"
-}
-```
+Notes: You can skip this step and deploy to the cloud directly.
 
 ---
 
-### 📝 Audio Transcription
-Run the code:
 
-```bash
-POST /transcribe_audio
-```
-
-**Example:**
-
-```bash
-curl -X POST http://localhost:3000/transcribe_audio \
-  -F "audio=@test_audio_samples/short_test.wav" \
-  -F 'data={"language": "en", "temperature": 0.1, "max_tokens": 1024}'
-```
-
----
-
-### ❓ Audio Q\&A
-Run the code:
-```bash
-POST /audio_qa
-```
-
-**Example:**
-
-```bash
-curl -X POST http://localhost:3000/audio_qa \
-  -F "audio=@test_audio_samples/medium_test.wav" \
-  -F 'data={"question": "What is the topic?", "temperature": 0.7}'
-```
-
----
 
 ## ☁️ Deploy to BentoCloud
 
-After testing locally, get the API key from Hugging Face website, deploy to [BentoCloud](https://cloud.bentoml.com/) for scalability:
+After testing locally, get the **API key** from **Hugging Face website**, deploy to [BentoCloud](https://cloud.bentoml.com/) for scalability:
 
-1. **Login and set secret**
+1. **Login and build**
+   Login will redirect you to the BentoML Cloud page to create a token. After successfully running **`bentoml build`**, you'll see large BentoML ASCII art displayed in your terminal.
 
 ```bash
 bentoml cloud login
-bentoml secret create huggingface HF_TOKEN=$HF_TOKEN
+bentoml build
 ```
 
 2. **Deploy**
 
-```bash
-bentoml deploy service:VoxtralAudioService --secret huggingface
+```
+bentoml deploy . -n your-deployment-name
 ```
 
-3. **Use the endpoint**
+3. **Get the endpoint**
 
-You'll receive a URL like `https://voxtral.bentoml.app/v1`
+    You'll receive a URL like **`https://voxtral.bentoml.app/v1`** 
+
+4. **Test on the Cloud**
+   Use the **`female.wav`** file to test your deployment.
+
+   ```
+   curl -X POST "https://voxtral-audio-service-v4-44dee3e6.mt-guc1.bentoml.ai/transcribe_audio" \
+          -H "Content-Type: multipart/form-data" \
+          -F "audio_file=@female.wav" \
+          --max-time 600
+   ```
 
 ---
 
@@ -136,6 +100,7 @@ You'll receive a URL like `https://voxtral.bentoml.app/v1`
 
 * 🔗 [Hugging Face Voxtral Model](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507)
 * 📘 [BentoML Documentation](https://docs.bentoml.com)
-* 🧠 [vLLM Inference Guide](https://docs.vllm.ai)
+* 🧠 [vLLM Inference Guide
+  ](https://docs.vllm.ai)
 
 ---
