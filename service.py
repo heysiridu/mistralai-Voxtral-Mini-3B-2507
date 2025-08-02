@@ -9,13 +9,13 @@ import bentoml
 
 # Use bentoml.importing() context for runtime-only dependencies
 with bentoml.importing():    
+    import torch
     import torch.nn.functional as F
-    from vllm import AsyncLLMEngine, EngineArgs
-    from vllm.sampling_params import SamplingParams
-
-import librosa
+    from openai import AsyncOpenAI
+    import librosa
+    
 import numpy as np
-import torch
+
 from pydantic import BaseModel, Field
 
 from config import VoxtralConfig
@@ -43,27 +43,32 @@ class AudioResponse(BaseModel):
 class VoxtralAudioService:
     def __init__(self):
         self.config = VoxtralConfig()
-        self.engine = None
-        # Note: vLLM engine will be initialized on first request
+        self.client = None
+        # Note: OpenAI client will be initialized on first request
     
-    async def _load_model(self):
-        """Initialize vLLM AsyncLLMEngine with audio support"""
+    async def _initialize_client(self):
+        """Initialize OpenAI client for vLLM server"""
         try:
-            logger.info(f"Loading model: {self.config.MODEL_NAME}")
+            logger.info("Initializing OpenAI client for vLLM")
             
-            # Configure vLLM engine arguments
-            engine_args = EngineArgs(
-                model=self.config.MODEL_NAME,
-                dtype=torch.bfloat16,
+            # Use transformers to load the model directly
+            from transformers import VoxtralForConditionalGeneration, AutoProcessor
+            
+            self.processor = AutoProcessor.from_pretrained(
+                self.config.MODEL_NAME,
                 trust_remote_code=True,
-                gpu_memory_utilization=0.8,
-                max_model_len=self.config.MAX_MODEL_LEN,
+                token=True
             )
             
-            # Create async engine
-            self.engine = AsyncLLMEngine.from_engine_args(engine_args)
+            self.model = VoxtralForConditionalGeneration.from_pretrained(
+                self.config.MODEL_NAME,
+                torch_dtype=torch.bfloat16,
+                trust_remote_code=True,
+                device_map="auto",
+                token=True
+            )
             
-            logger.info("vLLM engine loaded successfully")
+            logger.info("Transformers model loaded successfully")
             
         except Exception as e:
             logger.error(f"Failed to load model: {str(e)}")
@@ -82,37 +87,64 @@ class VoxtralAudioService:
             raise ValueError(f"Failed to process audio file: {str(e)}")
     
     async def _generate_response(self, text_prompt: str, audio_file_path: Path, temperature: float, max_tokens: int) -> str:
-        """Generate response using vLLM with audio support"""
+        """Generate response using Voxtral with proper transcription approach"""
         try:
-            # Create sampling parameters for vLLM
-            sampling_params = SamplingParams(
-                temperature=temperature,
-                max_tokens=max_tokens,
-                top_p=self.config.TOP_P,
-                repetition_penalty=self.config.REPETITION_PENALTY,
-            )
+            # Use Voxtral's transcription approach
+            if "transcribe" in text_prompt.lower():
+                # For transcription, use apply_transcription_request
+                inputs = self.processor.apply_transcription_request(
+                    language="en",  # You can make this configurable
+                    audio=str(audio_file_path),
+                    model_id=self.config.MODEL_NAME
+                )
+            else:
+                # For Q&A or other tasks, use conversation format
+                conversation = [
+                    {
+                        "role": "user", 
+                        "content": [
+                            {"type": "audio", "path": str(audio_file_path)},
+                            {"type": "text", "text": text_prompt}
+                        ]
+                    }
+                ]
+                inputs = self.processor.apply_chat_template(conversation)
             
-            # vLLM format: prompt with multi_modal_data
-            request_data = {
-                "prompt": text_prompt,
-                "multi_modal_data": {
-                    "audio": str(audio_file_path)
-                }
-            }
+            # Move to GPU if available
+            if torch.cuda.is_available() and hasattr(self.model, 'device'):
+                inputs = inputs.to(self.model.device, dtype=torch.bfloat16)
             
-            # Generate using vLLM async engine
-            results = await self.engine.generate(
-                **request_data,
-                sampling_params=sampling_params
-            )
+            # Generate response
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    **inputs, 
+                    max_new_tokens=max_tokens,
+                    temperature=temperature,
+                    top_p=self.config.TOP_P,
+                    repetition_penalty=self.config.REPETITION_PENALTY,
+                    do_sample=temperature > 0.0
+                )
             
-            # Extract generated text
-            generated_text = results[0].outputs[0].text
+            # Decode the generated text
+            generated_text = self.processor.batch_decode(
+                outputs[:, inputs.input_ids.shape[1]:], 
+                skip_special_tokens=True
+            )[0]
+            
             return generated_text.strip()
             
         except Exception as e:
             logger.error(f"Generation failed: {str(e)}")
             raise
+    
+    @bentoml.api
+    def health_check(self) -> Dict[str, str]:
+        """Simple health check endpoint"""
+        return {
+            "status": "healthy",
+            "model_loaded": str(hasattr(self, 'model') and self.model is not None),
+            "model_name": self.config.MODEL_NAME
+        }
     
     @bentoml.api
     async def transcribe_audio(
@@ -123,9 +155,9 @@ class VoxtralAudioService:
         max_tokens: int = 1024
     ) -> AudioResponse:
         """Transcribe audio to text"""
-        # Initialize engine if not already done
-        if self.engine is None:
-            await self._load_model()
+        # Initialize model if not already done
+        if not hasattr(self, 'model') or self.model is None:
+            await self._initialize_client()
             
         start_time = asyncio.get_event_loop().time()
         
@@ -175,9 +207,9 @@ class VoxtralAudioService:
         max_tokens: int = 2048
     ) -> AudioResponse:
         """Answer questions about audio content"""
-        # Initialize engine if not already done
-        if self.engine is None:
-            await self._load_model()
+        # Initialize model if not already done
+        if not hasattr(self, 'model') or self.model is None:
+            await self._initialize_client()
             
         start_time = asyncio.get_event_loop().time()
         
@@ -223,9 +255,9 @@ class VoxtralAudioService:
     async def health(self) -> Dict[str, str]:
         """Health check endpoint"""
         try:
-            # Simple engine check
-            if self.engine is None:
-                return {"status": "unhealthy", "reason": "Engine not loaded"}
+            # Simple model check
+            if not hasattr(self, 'model') or self.model is None:
+                return {"status": "unhealthy", "reason": "Model not loaded"}
             
             return {
                 "status": "healthy",
