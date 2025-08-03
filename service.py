@@ -38,6 +38,7 @@ class AudioResponse(BaseModel):
 @bentoml.service(
     name="voxtral-audio-service",
     resources={"gpu": 1, "gpu_type": "nvidia-tesla-t4", "memory": "16Gi"},
+    # q: why we need traffic time out here what does it mean?
     traffic={"timeout": 300},
 )
 
@@ -46,15 +47,13 @@ class VoxtralAudioService:
         self.config = VoxtralConfig()
         self.client = None
         # Note: OpenAI client will be initialized on first request
-    # mark Aug 2nd
+    
     async def _initialize_client(self):
         """Initialize OpenAI client for vLLM server"""
         try:
             logger.info("Initializing OpenAI client for vLLM")
             
-            # Use transformers to load the model directly
             from transformers import VoxtralForConditionalGeneration, AutoProcessor
-            
             self.processor = AutoProcessor.from_pretrained(
                 self.config.MODEL_NAME,
                 trust_remote_code=True,
