@@ -40,12 +40,13 @@ class AudioResponse(BaseModel):
     resources={"gpu": 1, "gpu_type": "nvidia-tesla-t4", "memory": "16Gi"},
     traffic={"timeout": 300},
 )
+
 class VoxtralAudioService:
     def __init__(self):
         self.config = VoxtralConfig()
         self.client = None
         # Note: OpenAI client will be initialized on first request
-    
+    # mark Aug 2nd
     async def _initialize_client(self):
         """Initialize OpenAI client for vLLM server"""
         try:
